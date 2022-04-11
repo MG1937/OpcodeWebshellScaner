@@ -19,7 +19,11 @@ namespace OpcodeWebshellScan
         private static StringBuilder output = new StringBuilder();
         static void Main(string[] args)
         {
-            
+            List<string> lists = new List<string>();
+            lists.Add("1");
+            lists.Add(null);
+            lists.Add("3");
+            Console.WriteLine("|"+lists.Count+"|");
             VldEnvironment.setPhpPath("php.exe");
             VldEnvironment.setPhpdbgPath("phpdbg.exe");
             VldInstance instance = new VldInstance();

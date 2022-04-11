@@ -8,7 +8,7 @@ namespace OpcodeWebshellScan.Utils
     {
         public static int TMP_FUNC_EXP = 0x00000001;
 
-        public static int TMP_NEWOBJ_EXP = 0x00000002;
+        public static int TMP_CLZOBJ_EXP = 0x00000002;
 
         /// <summary>
         /// 目标字符串中是否仍包含临时表达式
@@ -19,7 +19,7 @@ namespace OpcodeWebshellScan.Utils
         {
             int tmp = 0;
             if (obj.Contains("${tmp_func")) tmp |= TMP_FUNC_EXP;
-            if (obj.Contains("${tmp_newobj")) tmp |= TMP_NEWOBJ_EXP;
+            if (obj.Contains("${tmp_clzobj")) tmp |= TMP_CLZOBJ_EXP;
             return tmp;
         }
 
@@ -28,9 +28,19 @@ namespace OpcodeWebshellScan.Utils
             return (tmpNum & TMP_FUNC_EXP) != 0;
         }
 
-        public static bool containsTmpNewObjExp(int tmpNum)
+        public static bool containsTmpClzObjExp(int tmpNum)
         {
-            return (tmpNum & TMP_NEWOBJ_EXP) != 0;
+            return (tmpNum & TMP_CLZOBJ_EXP) != 0;
+        }
+
+        public static string formatStrByPhp(string str)
+        {
+            string tmp = PhpUtils.getExecOutput("echo (" + str + ");");
+            if (tmp.Contains("error"))
+            {
+                return null;
+            }
+            return tmp;
         }
     }
 }

@@ -62,22 +62,6 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
                     is_source = isSource(var1, handler, opArray);
                     break;
                 case "ROPE_ADD":
-                    {
-                        List<string> v1s = getValueAnyway(var1, handler, opArray);
-                        is_source = isSource(var1, handler, opArray);
-
-                        List<string> v2s = getValueAnyway(var2, handler, opArray);
-                        is_source = is_source ? true : isSource(var2, handler, opArray);
-
-                        foreach (string v1 in v1s)
-                        {
-                            foreach (string v2 in v2s)
-                            {
-                                save_values.Add("(" + v1 + ")" + "." + "(" + v2 + ")");
-                            }
-                        }
-                        break;
-                    }
                 case "ROPE_END":
                     {
                         List<string> v1s = getValueAnyway(var1, handler, opArray);
@@ -120,22 +104,23 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
                         }
                         break;
                     }
+                case "FETCH_CLASS":
                 case "NEW":
                     {
                         //需要考虑到构造函数的情况
                         List<string> clazzs = getValueAnyway(var1, handler, opArray);
-                        string tmpNewObjNum = handler.doCallHandler.getTmpNewObjNum();
-                        handler.doCallHandler.createNewObject(clazzs, tmpNewObjNum);
-                        if (isSource(var1, handler, opArray)) tmpNewObjNum += "_Source";
-                        handler.doCallRecord.Add(tmpNewObjNum);
-                        save_values.Add(tmpNewObjNum);
+                        string tmpClzObjNum = handler.doCallHandler.getTmpClzObjNum();
+                        handler.doCallHandler.createClazzObject(clazzs, tmpClzObjNum);
+                        if (isSource(var1, handler, opArray)) tmpClzObjNum += "_Source";
+                        handler.doCallRecord.Add(tmpClzObjNum);
+                        save_values.Add(tmpClzObjNum);
                         break;
                     }
                 //TODO:case "INIT_STATIC_METHOD_CALL":
                 case "INIT_METHOD_CALL":
                     {
                         //TODO:对象内调用本对象函数的情况仍需要改进!!!!
-                        List<string> objs = var2.Equals("") ? new List<string> { "${tmp_newobj_this}" } : getValueAnyway(var1, handler, opArray);
+                        List<string> objs = var2.Equals("") ? new List<string> { "${tmp_clzobj_this}" } : getValueAnyway(var1, handler, opArray);
                         List<string> fcallNames = getValueAnyway(var2.Equals("") ? var1 : var2, handler, opArray);
                         string tmpFcallNum = handler.doCallHandler.getTmpFuncNum();
                         handler.doCallHandler.createInitMethod(objs, fcallNames, tmpFcallNum);
@@ -251,8 +236,8 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
 
             foreach (string r in save_values)
             {
-                string exec = PhpUtils.getExecOutput("echo (" + r + ");");
-                if (exec.IndexOf("error") != -1)
+                string exec = HandlerUtils.formatStrByPhp(r);
+                if (exec == null)
                 {
                     BaseOpcodeHandler.saveResultAnyway(save_target, r, handler, opArray, is_source);
                 }

@@ -2,7 +2,6 @@
 using OpcodeWebshellScan.WebshellChecker;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace OpcodeWebshellScan.OpcodeHandler.Analyse
 {
@@ -13,7 +12,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
     /// 执行流程被操纵的情况下使得常量有多个可能的值,
     /// 而这对于整个操作码分析流程来说,此时的常量成为了"变量"!
     /// </summary>
-    public struct Var 
+    public struct Var
     {
         public bool IS_SOURCE;//变量是否可控
         public string VAR_NAME;//变量名
@@ -32,7 +31,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
         /// <param name="belongFunc">变量隶属方法</param>
         /// <param name="result">变量赋值结果</param>
         /// <param name="belongClazz">变量隶属类</param>
-        public void saveVar(string varName, string result, string belongFunc = "{main}",string belongClazz = "")
+        public void saveVar(string varName, string result, string belongFunc = "{main}", string belongClazz = "")
         {
             /*
              * E.G. classA::funcA::varA
@@ -82,7 +81,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
         /// <param name="varName"></param>
         /// <param name="belongFunc"></param>
         /// <param name="belongClazz"></param>
-        public void setSource(string varName, string belongFunc = "{main}", string belongClazz = "") 
+        public void setSource(string varName, string belongFunc = "{main}", string belongClazz = "")
         {
             string tmpName = belongClazz + "::" + belongFunc + "::" + varName;
             Var var = this.GetValueOrDefault(tmpName, new Var());
@@ -108,7 +107,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
     /// <summary>
     /// 临时寄存器保存器
     /// </summary>
-    public class RegisterSaver : Dictionary<string, Register> 
+    public class RegisterSaver : Dictionary<string, Register>
     {
         /*
          * 寄存器样式如下(以VLD输出的格式为例)
@@ -141,7 +140,9 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
             {
                 Register register = this.GetValueOrDefault(registerName, new Register());
                 List<string> resutls = register.RESULTS == null ? new List<string>() : register.RESULTS;
-                this.Remove(registerName);//寄存器被取出时则认为该寄存器此时应该被释放
+                //寄存器被取出时则认为该寄存器此时应该被释放
+                //通常认为在ZEND中寄存器不会被复用
+                this.Remove(registerName);
                 return resutls;
             }
             catch (Exception)
@@ -182,6 +183,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
     /// </summary>
     public class FuncReturnSaver : Dictionary<string, Func>
     {
+        //弃用?
         public List<Func> getAllFuncByName(string func_name)
         {
             List<Func> funcs = new List<Func>();
@@ -195,6 +197,11 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
             return funcs;
         }
 
+        public Func getCurrentFunc(string func_name, string clazz_name = "")
+        {
+            return this[clazz_name + "::" + func_name];
+        }
+
         public void setArgName(string arg_name, string func_name, string clazz_name = "")
         {
             string tmp = clazz_name + "::" + func_name;
@@ -205,15 +212,15 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
             this[tmp] = func;
         }
 
-        public void saveResult(string result,string func_name,string clazz_name = "")
+        public void saveResult(string result, string func_name, string clazz_name = "")
         {
             Func func = this.GetValueOrDefault(clazz_name + "::" + func_name, new Func());
             List<string> results = func.RESULTS == null ? new List<string>() : func.RESULTS;
-            if(!result.Equals("null")) results.Add(result);
+            if (!result.Equals("null")) results.Add(result);
             func.RESULTS = results;
             func.CLAZZ_NAME = clazz_name;
             func.FUNC_NAME = func_name;
-            
+
             this[clazz_name + "::" + func_name] = func;
         }
 
@@ -276,7 +283,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
         /// 分析操作码串的正式入口函数
         /// </summary>
         /// <param name="opcodeArray"></param>
-        public void analyseOpcodeBunch(OpCodeSaver opcodeArray) 
+        public void analyseOpcodeBunch(OpCodeSaver opcodeArray)
         {
             BaseOpcodeHandler handler = null;
             foreach (ZendOpArray opArray in opcodeArray)
@@ -295,6 +302,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
                     case "CONCAT":
                     case "CLONE":
                     case "CAST":
+                    case "FETCH_CLASS":
                     case "FAST_CONCAT":
                     case "INIT_DYNAMIC_CALL":
                     case "INIT_FCALL_BY_NAME":

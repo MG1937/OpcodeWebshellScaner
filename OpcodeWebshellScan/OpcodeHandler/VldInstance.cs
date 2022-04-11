@@ -149,9 +149,10 @@ namespace OpcodeWebshellScan.OpcodeHandler
                      */
                     if (tmp.Length == 1)//当前方法的操作码串全部录制完毕时进入分支
                     {
-                        List<OpCodeSaver> lists = opcodeSaver.GetValueOrDefault(func, new List<OpCodeSaver>());
+                        string tmp_key = (clazz.Equals("") ? "" : clazz + "::") + func;
+                        List <OpCodeSaver> lists = opcodeSaver.GetValueOrDefault(tmp_key, new List<OpCodeSaver>());
                         lists.Add(tmpOpcodeSaver);
-                        opcodeSaver[func] = lists;
+                        opcodeSaver[tmp_key] = lists;
                         recordOpcode = false;//停止录制
                         func = "";
                         //clazz = "";//FixBug 20220406 修订Vld对Clazz的作用域
@@ -221,7 +222,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
                         {
                             tmpOpcodeSaver.FUNC_NAME = tmpOpcodeSaver.FUNC_NAME.Substring(3, tmpOpcodeSaver.FUNC_NAME.IndexOf("%3A") - 4);
                         }
-                        func = (clazz.Equals("") ? "" : clazz + "::") + tmpOpcodeSaver.FUNC_NAME;
+                        func = tmpOpcodeSaver.FUNC_NAME;
                         continue;
                     }
                 }

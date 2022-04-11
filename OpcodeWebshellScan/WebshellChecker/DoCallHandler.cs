@@ -14,7 +14,7 @@ using System.Collections.Generic;
  */
 namespace OpcodeWebshellScan.WebshellChecker
 {
-    public struct NewObject
+    public struct ClazzObject
     {
         public string CLAZZ_NAME;
         public List<List<string>> ARGS;
@@ -22,7 +22,9 @@ namespace OpcodeWebshellScan.WebshellChecker
 
     public struct Function
     {
-        public List<string> TMP_NEWOBJS;//储存NEW操作码产生的临时表达式集
+        public List<string> TMP_CLZOBJS;//储存NEW操作码产生的临时表达式集
+
+        //20220403 该成员存疑:没有必要存在
         public bool STATIC;//若方法为对象中的方法,则应该记录该方法是否被static修饰
 
         public string FUNC_NAME;
@@ -51,68 +53,94 @@ namespace OpcodeWebshellScan.WebshellChecker
             {
                 saveSendInitFunc(args, tmpNum);
             }
-            else if (tmpNum.StartsWith("${tmp_newobj"))
+            else if (tmpNum.StartsWith("${tmp_clzobj"))
             {
-                saveSendToNewObj(args, tmpNum);
+                saveSendToClzObj(args, tmpNum);
             }
         }
 
-        /*
-         * New Object Block
+        /* +================+
+         * |New Object Block|
+         * +================+
          */
-        public Dictionary<string, List<NewObject>> tmp_newobjs = new Dictionary<string, List<NewObject>>();
+        public Dictionary<string, List<ClazzObject>> tmp_clzobjs = new Dictionary<string, List<ClazzObject>>();
 
-        public string getTmpNewObjNum()
+        public string getTmpClzObjNum()
         {
             TMP_DOCALL_NUM += 1;
-            return "${tmp_newobj" + TMP_DOCALL_NUM + "}";
+            return "${tmp_clzobj" + TMP_DOCALL_NUM + "}";
         }
 
-        public void createNewObject(List<string> clzNames, string tmpNewObjNum)
+        public void createClazzObject(List<string> clzNames, string tmpClzObjNum)
         {
-            List<NewObject> objs = new List<NewObject>();
+            List<ClazzObject> objs = new List<ClazzObject>();
             foreach (string n in clzNames)
             {
-                NewObject newObject = new NewObject();
-                newObject.CLAZZ_NAME = n;
-                objs.Add(newObject);
+                //clzName可能的形式:TEXT TMP_CLZNUM
+                ClazzObject clzObject = new ClazzObject();
+                clzObject.CLAZZ_NAME = n;
+                objs.Add(clzObject);
             }
-            tmp_newobjs[tmpNewObjNum] = objs;
+            tmp_clzobjs[tmpClzObjNum] = objs;
         }
 
         /// <summary>
         /// 处理NEW操作码下的SEND类操作码
         /// </summary>
         /// <param name="args"></param>
-        /// <param name="tmpNewObjNum"></param>
-        public void saveSendToNewObj(List<string> args, string tmpNewObjNum)
+        /// <param name="tmpClzObjNum"></param>
+        public void saveSendToClzObj(List<string> args, string tmpClzObjNum)
         {
-            List<NewObject> newObjects = tmp_newobjs.GetValueOrDefault(tmpNewObjNum, new List<NewObject>());
-            for (int i = 0; i < newObjects.Count; i++)
+            List<ClazzObject> clzObjects = tmp_clzobjs.GetValueOrDefault(tmpClzObjNum, new List<ClazzObject>());
+            for (int i = 0; i < clzObjects.Count; i++)
             {
-                NewObject newObject = newObjects[i];
-                List<List<string>> tmp_args = newObject.ARGS == null ? new List<List<string>>() : newObject.ARGS;
+                ClazzObject clzObject = clzObjects[i];
+                List<List<string>> tmp_args = clzObject.ARGS == null ? new List<List<string>>() : clzObject.ARGS;
                 tmp_args.Add(args);
-                newObject.ARGS = tmp_args;
-                newObjects[i] = newObject;
+                clzObject.ARGS = tmp_args;
+                clzObjects[i] = clzObject;
+            }
+            tmp_clzobjs[tmpClzObjNum] = clzObjects;
+        }
+
+        public List<string> getClzObjClazzes(string tmpClzObjNum)
+        {
+            //可能存在的形式:TEXT FETCH_CONSTANT {TMP_FUNCNUM/NEW(__toString)}
+            List<string> clzNames = new List<string>();
+            List<ClazzObject> clzObjs = tmp_clzobjs.GetValueOrDefault(tmpClzObjNum, new List<ClazzObject>());
+            foreach (ClazzObject clz in clzObjs)
+            {
+                int type = HandlerUtils.containsTmpExp(clz.CLAZZ_NAME);
+                if (HandlerUtils.containsFuncExp(type))
+                {
+                    //存在临时函数表达式或表达式与明文混合
+                    foreach (string name in getAllFuncReturnFromTample(clz.CLAZZ_NAME))
+                    {
+                        //MAY HAVE BUG??20220411
+                        string tmp = HandlerUtils.formatStrByPhp(name);
+                        if(tmp != null) clzNames.Add(tmp);
+                    }
+                }
+                else if (HandlerUtils.containsTmpClzObjExp(type))
+                {
+                    clzNames.AddRange(getClzObjClazzes(clz.CLAZZ_NAME));
+                }
+                else
+                {
+                    //默认情况
+                    clzNames.Add(clz.CLAZZ_NAME);
+                }
             }
 
-            tmp_newobjs[tmpNewObjNum] = newObjects;
+            return clzNames;
         }
 
-        /// <summary>
-        /// 根据临时表达式获取返回集
-        /// </summary>
-        /// <param name="tmpNewObj"></param>
-        /// <returns></returns>
-        public Dictionary<string, List<string>> getNewObjReturns(string tmpNewObj)
-        {
-            return null;
-        }
-
-        /*
-         * Function Block
+        /* 
+         * +==============+
+         * |Function Block|
+         * +==============+
          */
+
         //储存临时表达式可能的函数集
         public Dictionary<string, List<Function>> tmp_funcs = new Dictionary<string, List<Function>>();
 
@@ -137,7 +165,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                 Function function = new Function();
                 function.FUNC_NAME = f;
                 function.STATIC = is_static;
-                function.TMP_NEWOBJS = tmpObjNums;
+                function.TMP_CLZOBJS = tmpObjNums;
                 functions.Add(function);
             }
             tmp_funcs[tmpFuncNum] = functions;
@@ -175,8 +203,20 @@ namespace OpcodeWebshellScan.WebshellChecker
             tmp_funcs[tmpFuncNum] = functions;
         }
 
+        /*
+         * TODO:
+         * getFuncReturns函数的部分职能可能与getAllFuncReturnFromTample函数的职能存在冲突.
+         * getFuncReturns函数的搜索深度原则上为MAX,但是不处理tmpFuncNum以外的表达式.
+         * getAllFuncReturnFromTample函数的搜索深度原则上应为1,但可处理tmpFuncNum与text混合的表达式.
+         * 以上两个函数应为互补关系,但在实际编写过程中getAllFuncReturnFromTample函数的搜索职能逐渐趋向于深度MAX,
+         * 但由于getFuncReturns函数已在搜索职能上实现MAX,这或许会让整个表达式的处理过程经历多个搜索深度为MAX的流程,
+         * 严重拖慢了整个处理流程,需要优化
+         * 20220411
+         */
+
         /// <summary>
         /// 获取指定临时函数表达式的所有返回结果
+        /// 搜索深度:MAX
         /// </summary>
         /// <param name="tmpFuncNum"></param>
         /// <returns></returns>
@@ -254,23 +294,23 @@ namespace OpcodeWebshellScan.WebshellChecker
                 /*
                  * 针对INIT_METHOD_CALL类操作码具体操作的对象
                  */
-                List<string> newobjs = new List<string>();
-                if (function.TMP_NEWOBJS != null)
+                List<string> tmpobjs = new List<string>();
+                if (function.TMP_CLZOBJS != null)
                 {
-                    foreach (string tmp in function.TMP_NEWOBJS)
+                    foreach (string tmp in function.TMP_CLZOBJS)
                     {
                         int tmpNum = HandlerUtils.containsTmpExp(tmp);
-                        if (HandlerUtils.containsTmpNewObjExp(tmpNum))
+                        if (HandlerUtils.containsTmpClzObjExp(tmpNum))
                         {
-                            newobjs.Add(tmp);
+                            tmpobjs.Add(tmp);
                         }
                         else if (HandlerUtils.containsFuncExp(tmpNum))
                         {
                             foreach (string r in getFuncReturns(tmp))
                             {
-                                if (HandlerUtils.containsTmpNewObjExp(HandlerUtils.containsTmpExp(r)))
+                                if (HandlerUtils.containsTmpClzObjExp(HandlerUtils.containsTmpExp(r)))
                                 {
-                                    newobjs.Add(r);
+                                    tmpobjs.Add(r);
                                 }
                             }
                         }
@@ -280,32 +320,46 @@ namespace OpcodeWebshellScan.WebshellChecker
                      * 若当前处理的函数为静态修饰且为对象内函数,则认为仅需要收集对象名
                      * 而不需要处理传入对象的参数
                      */
-                    if (function.STATIC && newobjs.Count != 0)
-                    {
-                        List<string> tempFuncs = new List<string>();
-                        funcNames.ForEach(s =>
-                        {
-                            foreach (string t in newobjs)
-                            {
-                                foreach (NewObject n in tmp_newobjs[t])
-                                {
-
-                                }
-                            }
-                        });
-                    }
+                    //if (function.STATIC && newobjs.Count != 0)
+                    //{
+                    //    List<string> tempFuncs = new List<string>();
+                    //    funcNames.ForEach(s =>
+                    //    {
+                    //        foreach (string t in newobjs)
+                    //        {
+                    //            foreach (NewObject n in tmp_newobjs[t])
+                    //            {
+                    //            }
+                    //        }
+                    //    });
+                    //}
                 }
 
                 foreach (string funcName in funcNames)
                 {
-                    List<Func> funcs = handler.funcSaver.getAllFuncByName(funcName);
+                    List<Func> funcs = new List<Func>();
+                    if (function.TMP_CLZOBJS == null)
+                    {
+                        funcs = handler.funcSaver.getAllFuncByName(funcName);
+                    }
+                    else
+                    {
+                        //函数拥有对象时
+                        foreach (string t in tmpobjs)
+                        {
+                            foreach (string c in getClzObjClazzes(t))
+                            {
+                                funcs.Add(handler.funcSaver.getCurrentFunc(funcName, c));
+                            }
+                        }
+                    }
 
                     /*
                      * 当getAllFuncByName函数有相应返回Func对象集时
                      * 代表本地声明的方法集中拥有目标方法
                      * 若返回集合为空则认为目标方法为内置函数或根本没有声明该方法
                      */
-                    if ((funcs.Count == 0) && (function.TMP_NEWOBJS == null))
+                    if ((funcs.Count == 0) && (function.TMP_CLZOBJS == null))
                     {
                         int argIndex = 0;
                         List<string> execs = new List<string>();
@@ -347,7 +401,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                      * 若获取的Func对象集为空,但TMP_NEWOBJS不为空(即DO_CALL的函数为某个对象内的方法)时
                      * 则认为该函数不存在或其对象为内置对象,但此处认为调用内置对象的函数没有任何意义.
                      */
-                    else if ((funcs.Count == 0) && (function.TMP_NEWOBJS != null))
+                    else if ((funcs.Count == 0) && (function.TMP_CLZOBJS != null))
                     {
                         continue;
                     }
@@ -403,7 +457,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                                 {
                                     //需要传播参数且在传参链中非底层
                                     List<string> arg_params = new List<string>();
-                                    function.ARGS_PARAMS[argIndex].ForEach(a => 
+                                    function.ARGS_PARAMS[argIndex].ForEach(a =>
                                     {
                                         //FixBug 20220408 修复未考虑参数为函数表达式的情况
                                         if (HandlerUtils.containsFuncExp(HandlerUtils.containsTmpExp(a)))
@@ -504,7 +558,6 @@ namespace OpcodeWebshellScan.WebshellChecker
 
         /*
          * 将所有带有临时函数表达式的'模板'转为结果集
-         * 注意:搜索深度为1
          */
         public List<string> getAllFuncReturnFromTample(string tample, Function extFunction = new Function(), Func extFunc = new Func())
         {
