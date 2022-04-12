@@ -315,6 +315,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
                     case "SEND_REF":
                     case "NEW":
                     case "INIT_METHOD_CALL":
+                    case "INIT_STATIC_METHOD_CALL":
                     case "DO_ICALL":
                     case "DO_FCALL":
                     case "DO_FCALL_BY_NAME":

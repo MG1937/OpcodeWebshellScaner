@@ -107,6 +107,12 @@ namespace OpcodeWebshellScan.WebshellChecker
         {
             //可能存在的形式:TEXT FETCH_CONSTANT {TMP_FUNCNUM/NEW(__toString)}
             List<string> clzNames = new List<string>();
+            string tmp = HandlerUtils.formatStrByPhp(tmpClzObjNum);
+            if (tmp != null)
+            {
+                clzNames.Add(tmp);
+                return clzNames;
+            }
             List<ClazzObject> clzObjs = tmp_clzobjs.GetValueOrDefault(tmpClzObjNum, new List<ClazzObject>());
             foreach (ClazzObject clz in clzObjs)
             {
@@ -117,7 +123,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                     foreach (string name in getAllFuncReturnFromTample(clz.CLAZZ_NAME))
                     {
                         //MAY HAVE BUG??20220411
-                        string tmp = HandlerUtils.formatStrByPhp(name);
+                        tmp = HandlerUtils.formatStrByPhp(name);
                         if(tmp != null) clzNames.Add(tmp);
                     }
                 }
@@ -292,7 +298,8 @@ namespace OpcodeWebshellScan.WebshellChecker
                 }
 
                 /*
-                 * 针对INIT_METHOD_CALL类操作码具体操作的对象
+                 * 虽然此处对CLZ对象集的形式没有限制
+                 * 但原则上应向CLZ表达式靠拢
                  */
                 List<string> tmpobjs = new List<string>();
                 if (function.TMP_CLZOBJS != null)
@@ -300,19 +307,16 @@ namespace OpcodeWebshellScan.WebshellChecker
                     foreach (string tmp in function.TMP_CLZOBJS)
                     {
                         int tmpNum = HandlerUtils.containsTmpExp(tmp);
-                        if (HandlerUtils.containsTmpClzObjExp(tmpNum))
-                        {
-                            tmpobjs.Add(tmp);
-                        }
-                        else if (HandlerUtils.containsFuncExp(tmpNum))
+                        if (HandlerUtils.containsFuncExp(tmpNum))
                         {
                             foreach (string r in getFuncReturns(tmp))
                             {
-                                if (HandlerUtils.containsTmpClzObjExp(HandlerUtils.containsTmpExp(r)))
-                                {
-                                    tmpobjs.Add(r);
-                                }
+                                tmpobjs.Add(r);
                             }
+                        }
+                        else
+                        {
+                            tmpobjs.Add(tmp);
                         }
                     }
 

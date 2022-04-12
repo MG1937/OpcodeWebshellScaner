@@ -1,7 +1,5 @@
 ﻿using OpcodeWebshellScan.Utils;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Web;
 
 namespace OpcodeWebshellScan.OpcodeHandler
@@ -24,13 +22,15 @@ namespace OpcodeWebshellScan.OpcodeHandler
     /// Opcode串保存器
     /// 原则上保存分析文件的方法对应的Opcode串
     /// </summary>
-    public class OpCodeSaver : List<ZendOpArray> {
+    public class OpCodeSaver : List<ZendOpArray>
+    {
 
         public string CLAZZ_NAME = "";//操作码串隶属类
 
         public string FUNC_NAME = "{main}";//操作码串隶属方法
 
-        public void AddOpArrays(ZendOpArray opArrays) {
+        public void AddOpArrays(ZendOpArray opArrays)
+        {
             base.Add(opArrays);
         }
     }
@@ -46,7 +46,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
         /// </summary>
         public Dictionary<string, List<OpCodeSaver>> opcodeSaver = new Dictionary<string, List<OpCodeSaver>>();
 
-        public Dictionary<string, List<OpCodeSaver>> getOpCodeSaver() 
+        public Dictionary<string, List<OpCodeSaver>> getOpCodeSaver()
         {
             return opcodeSaver;
         }
@@ -55,23 +55,23 @@ namespace OpcodeWebshellScan.OpcodeHandler
         /// 替换compiled vars
         /// </summary>
         /// <returns></returns>
-        private string replaceCompiledVar(Dictionary<string,string> compiledVars,string data)
+        private string replaceCompiledVar(Dictionary<string, string> compiledVars, string data)
         {
             foreach (string compiledvar in compiledVars.Keys)
             {
-                data = data.Replace(compiledvar, compiledVars.GetValueOrDefault(compiledvar,""));
+                data = data.Replace(compiledvar, compiledVars.GetValueOrDefault(compiledvar, ""));
                 //TODO:May have bug?? 20220201
             }
             return data;
         }
 
-        public void createVldInstance(string phpFile) 
+        public void createVldInstance(string phpFile)
         {
             string opcodes = CmdUtils.getExecOutput(VldEnvironment.getPhpPath(), "-dvld.active=1 -dvld.execute=0 -dvld.verbosity=0 -f " + phpFile) + "\n";
 
-           /*
-            * 处理操作码串的一些基本信息 
-            */
+            /*
+             * 处理操作码串的一些基本信息 
+             */
             string clazz = "";
             string func = "{main}";
             string lineNum = "1";
@@ -103,7 +103,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
                     7     7      > RETURN                                                   null
                 */
 
-                if (line.StartsWith("-")||recordOpcode)
+                if (line.StartsWith("-") || recordOpcode)
                 {
                     if (!recordOpcode)
                     {
@@ -120,7 +120,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
                      * 行号以及操作码引索提取
                      * 并且将在检测到行号或操作码引索时设置基础偏移量
                      */
-                    for (int i = 1; i < tmp.Length; i++) 
+                    for (int i = 1; i < tmp.Length; i++)
                     {
                         int tmp_i;
                         string indexStr = tmp[i];
@@ -130,7 +130,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
                             opArrays.PHP_LINE = tmp_lineNum;
                             opArrays.OP_LINE = indexStr.Replace("*", "");
                             baseIndex = line.IndexOf(" " + indexStr + " ") + indexStr.Length;
-                            int tmp_baseIndex = (line.Substring(baseIndex,20).IndexOf(" " + indexStr + " "));
+                            int tmp_baseIndex = (line.Substring(baseIndex, 20).IndexOf(" " + indexStr + " "));
                             if (tmp_baseIndex != -1) baseIndex = baseIndex + tmp_baseIndex + 1 + indexStr.Length;
                             lineNum = tmp_lineNum;
                             break;
@@ -150,7 +150,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
                     if (tmp.Length == 1)//当前方法的操作码串全部录制完毕时进入分支
                     {
                         string tmp_key = (clazz.Equals("") ? "" : clazz + "::") + func;
-                        List <OpCodeSaver> lists = opcodeSaver.GetValueOrDefault(tmp_key, new List<OpCodeSaver>());
+                        List<OpCodeSaver> lists = opcodeSaver.GetValueOrDefault(tmp_key, new List<OpCodeSaver>());
                         lists.Add(tmpOpcodeSaver);
                         opcodeSaver[tmp_key] = lists;
                         recordOpcode = false;//停止录制
@@ -172,7 +172,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
                     string[] vars = line.Substring(baseIndex + 65).Trim().Split(",");
                     //TODO:May have bug?? 20220201
                     opArrays.VAR1 = replaceCompiledVar(compiledVars, vars[0]).Trim();
-                    opArrays.VAR2 = vars.Length>1?replaceCompiledVar(compiledVars, vars[1]).Trim():"";
+                    opArrays.VAR2 = vars.Length > 1 ? replaceCompiledVar(compiledVars, vars[1]).Trim() : "";
 
                     if (opArrays.VAR1.StartsWith("'") && opArrays.VAR1.EndsWith("'"))
                     {
@@ -190,7 +190,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
                     tmpOpcodeSaver.AddOpArrays(opArrays);//储存临时操作码串
 
                 }
-                else 
+                else
                 {
                     //记录类与方法名以及提取变量
                     if (line.StartsWith("Class "))

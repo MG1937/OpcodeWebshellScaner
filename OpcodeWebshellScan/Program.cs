@@ -1,14 +1,9 @@
 ﻿using OpcodeWebshellScan.OpcodeHandler;
 using OpcodeWebshellScan.OpcodeHandler.Analyse;
-using OpcodeWebshellScan.Utils;
 using OpcodeWebshellScan.WebshellChecker;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace OpcodeWebshellScan
 {
@@ -19,11 +14,6 @@ namespace OpcodeWebshellScan
         private static StringBuilder output = new StringBuilder();
         static void Main(string[] args)
         {
-            List<string> lists = new List<string>();
-            lists.Add("1");
-            lists.Add(null);
-            lists.Add("3");
-            Console.WriteLine("|"+lists.Count+"|");
             VldEnvironment.setPhpPath("php.exe");
             VldEnvironment.setPhpdbgPath("phpdbg.exe");
             VldInstance instance = new VldInstance();
@@ -40,7 +30,6 @@ namespace OpcodeWebshellScan
                 }
             }
 
-            string msg = "";
             foreach (string tmpNum in handler.doCallHandler.tmp_funcs.Keys)
             {
                 List<Function> functions = handler.doCallHandler.tmp_funcs[tmpNum];
@@ -52,11 +41,10 @@ namespace OpcodeWebshellScan
                         Console.WriteLine(r);
                     }
                 }
-                
             }
-            
+
             Console.WriteLine("All Done!!");
-            
+
 
             //Console.WriteLine(Regex.IsMatch("as12_dsa","^([a-zA-z0-9_])+$"));
             //Console.WriteLine(CmdUtils.getExecOutput("phpdbg.exe"));

@@ -81,6 +81,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
                     }
                 case "CAST":
                 case "CLONE":
+                case "FETCH_CLASS":
                     {
                         save_values.AddRange(getValueAnyway(var1, handler, opArray));
                         is_source = isSource(var1, handler, opArray);
@@ -104,7 +105,6 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
                         }
                         break;
                     }
-                case "FETCH_CLASS":
                 case "NEW":
                     {
                         //需要考虑到构造函数的情况
@@ -116,11 +116,11 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
                         save_values.Add(tmpClzObjNum);
                         break;
                     }
-                //TODO:case "INIT_STATIC_METHOD_CALL":
+                case "INIT_STATIC_METHOD_CALL":
                 case "INIT_METHOD_CALL":
                     {
                         //TODO:对象内调用本对象函数的情况仍需要改进!!!!
-                        List<string> objs = var2.Equals("") ? new List<string> { "${tmp_clzobj_this}" } : getValueAnyway(var1, handler, opArray);
+                        List<string> objs = var2.Equals("") ? new List<string> { opArray.CLAZZ_NAME/*THIS*/ } : getValueAnyway(var1, handler, opArray);
                         List<string> fcallNames = getValueAnyway(var2.Equals("") ? var1 : var2, handler, opArray);
                         string tmpFcallNum = handler.doCallHandler.getTmpFuncNum();
                         handler.doCallHandler.createInitMethod(objs, fcallNames, tmpFcallNum);
