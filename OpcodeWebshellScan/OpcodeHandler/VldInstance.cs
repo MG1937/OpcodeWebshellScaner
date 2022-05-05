@@ -215,6 +215,7 @@ namespace OpcodeWebshellScan.OpcodeHandler
                         }
                         continue;
                     }
+                    //20220426 FixBug 修复提取的方法名大小写不对应的问题
                     else if (line.StartsWith("Function "))
                     {
                         tmpOpcodeSaver.FUNC_NAME = line.Trim().Substring(9).Replace(":", "");//在本轮操作码解析前保存方法名
@@ -224,6 +225,13 @@ namespace OpcodeWebshellScan.OpcodeHandler
                         }
                         func = tmpOpcodeSaver.FUNC_NAME;
                         continue;
+                    }
+                    else if (line.StartsWith("function name:"))
+                    {
+                        string tmp = line.Substring(14).Trim();
+                        if (tmp.Equals("{closure}")) continue;
+                        tmpOpcodeSaver.FUNC_NAME = tmp;
+                        func = tmpOpcodeSaver.FUNC_NAME;
                     }
                 }
             }

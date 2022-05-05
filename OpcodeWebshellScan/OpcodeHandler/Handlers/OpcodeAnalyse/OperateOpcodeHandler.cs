@@ -1,7 +1,7 @@
 ﻿using OpcodeWebshellScan.Utils;
 using System.Collections.Generic;
 
-namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
+namespace OpcodeWebshellScan.OpcodeHandler.Handlers.OpcodeAnalyse
 {
     class OperateOpcodeHandler : BaseOpcodeHandler
     {
@@ -85,6 +85,14 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
                     {
                         save_values.AddRange(getValueAnyway(var1, handler, opArray));
                         is_source = isSource(var1, handler, opArray);
+                        break;
+                    }
+                case "FETCH_THIS":
+                    {
+                        List<string> clz = new List<string> { opArray.CLAZZ_NAME };
+                        string tmp_clznum = handler.doCallHandler.getTmpClzObjNum();
+                        handler.doCallHandler.createClazzObject(clz, tmp_clznum);
+                        save_values.Add(tmp_clznum);
                         break;
                     }
                 case "CONCAT":
@@ -196,7 +204,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
                         string tmpFcallNum = handler.doCallRecord[handler.doCallRecord.Count - 1];
                         if (!opArray.RESULT.Equals(""))
                         {
-                            BaseOpcodeHandler.saveResultAnyway(opArray.RESULT, tmpFcallNum.Replace("_Source", ""), handler, opArray, (tmpFcallNum.EndsWith("_Source")));
+                            BaseOpcodeHandler.saveResultAnyway(opArray.RESULT, tmpFcallNum.Replace("_Source", ""), handler, opArray, tmpFcallNum.EndsWith("_Source"));
                         }
                         handler.doCallRecord.RemoveAt(handler.doCallRecord.Count - 1);
                         return;
@@ -264,6 +272,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
 
         /// <summary>
         /// 获取对象的值,无论对象是寄存器,变量还是对象本身
+        /// 原则上返回的值集不应经过任何处理,都应由其他模块决定如何处理
         /// </summary>
         /// <param name="objName"></param>
         /// <returns></returns>
@@ -271,7 +280,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
         {
             List<string> tmp = new List<string>();
 
-            if ((objName.StartsWith("'") && objName.EndsWith("'")) || objName.StartsWith("${tmp_func") || objName.StartsWith("{$"))
+            if (objName.StartsWith("'") && objName.EndsWith("'") || objName.StartsWith("${tmp_func") || objName.StartsWith("{$"))
             {
                 tmp.Add(objName);
                 return tmp;

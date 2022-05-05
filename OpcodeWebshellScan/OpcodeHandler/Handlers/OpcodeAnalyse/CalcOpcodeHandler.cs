@@ -1,9 +1,7 @@
 ﻿using OpcodeWebshellScan.Utils;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
+namespace OpcodeWebshellScan.OpcodeHandler.Handlers.OpcodeAnalyse
 {
     class CalcOpcodeHandler : BaseOpcodeHandler
     {
@@ -163,7 +161,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
             /*
              * 产生并储存所有可能
              */
-            foreach (string v1 in var1s) 
+            foreach (string v1 in var1s)
             {
                 foreach (string v2 in var2s)
                 {
@@ -181,7 +179,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
             }
 
 
-            
+
         }
     }
 }

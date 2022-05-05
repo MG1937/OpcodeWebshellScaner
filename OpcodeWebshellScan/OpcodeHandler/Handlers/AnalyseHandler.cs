@@ -1,9 +1,9 @@
-﻿using OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse;
-using OpcodeWebshellScan.WebshellChecker;
+﻿using OpcodeWebshellScan.OpcodeHandler.Handlers.CallOpHandlers;
+using OpcodeWebshellScan.OpcodeHandler.Handlers.OpcodeAnalyse;
 using System;
 using System.Collections.Generic;
 
-namespace OpcodeWebshellScan.OpcodeHandler.Analyse
+namespace OpcodeWebshellScan.OpcodeHandler.Handlers
 {
     /// <summary>
     /// 用以储存所有"变量"的结构体.
@@ -24,6 +24,34 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
     /// </summary>
     public class VarSaver : Dictionary<string, Var>
     {
+        /*
+         * 20220413
+         * 以NON_LOCAL为名的函数指代所有非局部变量(暂定).
+         */
+        static string NOT_LOCAL_VAR = "!NL!";
+
+        /// <summary>
+        /// 储存隶属于对象的成员及其值(暂定)
+        /// </summary>
+        /// <param name="varName"></param>
+        /// <param name="result"></param>
+        /// <param name="belongClazz"></param>
+        public void saveVarInClazz(string varName, string result, string belongClazz)
+        {
+            saveVar(varName, result, NOT_LOCAL_VAR, belongClazz);
+        }
+
+        /// <summary>
+        /// 获取隶属于对象的成员的结果集(暂定)
+        /// </summary>
+        /// <param name="varName"></param>
+        /// <param name="belongClazz"></param>
+        /// <returns></returns>
+        public Var getVarInClazz(string varName, string belongClazz)
+        {
+            return getVar(varName, NOT_LOCAL_VAR, belongClazz);
+        }
+
         /// <summary>
         /// 储存变量的值
         /// </summary>
@@ -33,7 +61,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
         /// <param name="belongClazz">变量隶属类</param>
         public void saveVar(string varName, string result, string belongFunc = "{main}", string belongClazz = "")
         {
-            /*
+            /* 
              * E.G. classA::funcA::varA
              */
             string tmpName = belongClazz + "::" + belongFunc + "::" + varName;
@@ -142,7 +170,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
                 List<string> resutls = register.RESULTS == null ? new List<string>() : register.RESULTS;
                 //寄存器被取出时则认为该寄存器此时应该被释放
                 //通常认为在ZEND中寄存器不会被复用
-                this.Remove(registerName);
+                Remove(registerName);
                 return resutls;
             }
             catch (Exception)
@@ -187,7 +215,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
         public List<Func> getAllFuncByName(string func_name)
         {
             List<Func> funcs = new List<Func>();
-            foreach (string k in this.Keys)
+            foreach (string k in Keys)
             {
                 if (this[k].FUNC_NAME.Equals(func_name))
                 {
@@ -303,6 +331,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
                     case "CLONE":
                     case "CAST":
                     case "FETCH_CLASS":
+                    case "FETCH_THIS":
                     case "FAST_CONCAT":
                     case "INIT_DYNAMIC_CALL":
                     case "INIT_FCALL_BY_NAME":
@@ -323,6 +352,7 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
                     case "DO_UCALL_BY_NAME":
                     case "RECV":
                     case "RECV_INIT":
+                    case "INCLUDE_OR_EVAL"://EVAL!!!
                     case "RETURN":
                         handler = new OperateOpcodeHandler();
                         break;
@@ -354,9 +384,6 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse
 
                 handler.handleZendOpCode(opArray, this);
             }
-
-            //Opcode Handle Done.
-            VarSaver tmp = varSaver;
         }
     }
 }

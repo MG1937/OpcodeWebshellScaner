@@ -5,4 +5,12 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="OpcodeHandler\Monitor\RuleConfig\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jint" Version="2.11.58" />
+  </ItemGroup>
+
 </Project>

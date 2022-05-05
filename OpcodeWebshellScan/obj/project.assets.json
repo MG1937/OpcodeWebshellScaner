@@ -1,11 +1,40 @@
 {
   "version": 3,
   "targets": {
-    ".NETCoreApp,Version=v3.1": {}
+    ".NETCoreApp,Version=v3.1": {
+      "Jint/2.11.58": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Jint.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Jint.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "Jint/2.11.58": {
+      "sha512": "obRlPnuSmbjO7I2bfuKc1d+K1LB3xyg1Cnm2MT7PGUOHOntcdR96pDhsQnWBI5Dhxqr1Bj5/odpNi/B+AwVlPA==",
+      "type": "package",
+      "path": "jint/2.11.58",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "jint.2.11.58.nupkg.sha512",
+        "jint.nuspec",
+        "lib/net40/Jint.dll",
+        "lib/net45/Jint.dll",
+        "lib/net451/Jint.dll",
+        "lib/netstandard1.3/Jint.dll",
+        "lib/netstandard2.0/Jint.dll"
+      ]
+    }
+  },
   "projectFileDependencyGroups": {
-    ".NETCoreApp,Version=v3.1": []
+    ".NETCoreApp,Version=v3.1": [
+      "Jint >= 2.11.58"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\Administrator\\.nuget\\packages\\": {},
@@ -50,6 +79,12 @@
     "frameworks": {
       "netcoreapp3.1": {
         "targetAlias": "netcoreapp3.1",
+        "dependencies": {
+          "Jint": {
+            "target": "Package",
+            "version": "[2.11.58, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",

@@ -43,6 +43,12 @@
       "frameworks": {
         "netcoreapp3.1": {
           "targetAlias": "netcoreapp3.1",
+          "dependencies": {
+            "Jint": {
+              "target": "Package",
+              "version": "[2.11.58, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

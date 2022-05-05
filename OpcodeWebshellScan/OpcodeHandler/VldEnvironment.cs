@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OpcodeWebshellScan.OpcodeHandler
+﻿namespace OpcodeWebshellScan.OpcodeHandler
 {
     /// <summary>
     /// 初步解析Vld输出的Opcode
@@ -17,7 +13,8 @@ namespace OpcodeWebshellScan.OpcodeHandler
         /// 设置phpdbg路径
         /// </summary>
         /// <param name="path">path</param>
-        public static void setPhpdbgPath(string path) {
+        public static void setPhpdbgPath(string path)
+        {
             PHPDBG_PATH = path;
         }
 
@@ -26,15 +23,18 @@ namespace OpcodeWebshellScan.OpcodeHandler
         /// 设置php路径
         /// </summary>
         /// <param name="path">path</param>
-        public static void setPhpPath(string path) {
+        public static void setPhpPath(string path)
+        {
             PHP_PATH = path;
         }
 
-        public static string getPhpdbgPath() {
+        public static string getPhpdbgPath()
+        {
             return PHPDBG_PATH;
         }
 
-        public static string getPhpPath() {
+        public static string getPhpPath()
+        {
             return PHP_PATH;
         }
     }

@@ -1,6 +1,6 @@
 ﻿using OpcodeWebshellScan.OpcodeHandler;
-using OpcodeWebshellScan.OpcodeHandler.Analyse;
-using OpcodeWebshellScan.WebshellChecker;
+using OpcodeWebshellScan.OpcodeHandler.Handlers;
+using OpcodeWebshellScan.OpcodeHandler.Handlers.CallOpHandlers;
 using System;
 using System.Collections.Generic;
 using System.Text;

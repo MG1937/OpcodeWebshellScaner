@@ -1,5 +1,4 @@
-﻿using OpcodeWebshellScan.OpcodeHandler.Analyse;
-using OpcodeWebshellScan.Utils;
+﻿using OpcodeWebshellScan.Utils;
 using System.Collections.Generic;
 
 /*
@@ -12,7 +11,7 @@ using System.Collections.Generic;
  * 而且AnalyseHandler设计时的初衷就是为了储存关键数据的
  * 而该命名空间下的模块又是处理数据的
  */
-namespace OpcodeWebshellScan.WebshellChecker
+namespace OpcodeWebshellScan.OpcodeHandler.Handlers.CallOpHandlers
 {
     public struct ClazzObject
     {
@@ -76,7 +75,7 @@ namespace OpcodeWebshellScan.WebshellChecker
             List<ClazzObject> objs = new List<ClazzObject>();
             foreach (string n in clzNames)
             {
-                //clzName可能的形式:TEXT TMP_CLZNUM
+                //clzName可能的形式:TEXT TMP_CLZNUM TMP_FUNC
                 ClazzObject clzObject = new ClazzObject();
                 clzObject.CLAZZ_NAME = n;
                 objs.Add(clzObject);
@@ -124,7 +123,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                     {
                         //MAY HAVE BUG??20220411
                         tmp = HandlerUtils.formatStrByPhp(name);
-                        if(tmp != null) clzNames.Add(tmp);
+                        if (tmp != null) clzNames.Add(tmp);
                     }
                 }
                 else if (HandlerUtils.containsTmpClzObjExp(type))
@@ -134,7 +133,9 @@ namespace OpcodeWebshellScan.WebshellChecker
                 else
                 {
                     //默认情况
-                    clzNames.Add(clz.CLAZZ_NAME);
+                    tmp = HandlerUtils.formatStrByPhp(clz.CLAZZ_NAME);
+                    if (tmp != null) clzNames.Add(tmp);
+                    clzNames.Add(tmp);
                 }
             }
 
@@ -273,7 +274,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                         {
                             string tmp = PhpUtils.getExecOutput("echo (" + s + ");");
                             int tmpNum = 0;
-                            if ((tmp.Contains("error")) && ((tmpNum = HandlerUtils.containsTmpExp(s)) != 0))
+                            if (tmp.Contains("error") && (tmpNum = HandlerUtils.containsTmpExp(s)) != 0)
                             {
                                 //若字符串无法被echo正确输出且仍存在临时表达式时
                                 //则认为字符串仍需要进行进一步处理
@@ -363,7 +364,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                      * 代表本地声明的方法集中拥有目标方法
                      * 若返回集合为空则认为目标方法为内置函数或根本没有声明该方法
                      */
-                    if ((funcs.Count == 0) && (function.TMP_CLZOBJS == null))
+                    if (funcs.Count == 0 && function.TMP_CLZOBJS == null)
                     {
                         int argIndex = 0;
                         List<string> execs = new List<string>();
@@ -372,7 +373,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                         execs.Add(exec);
                         if (function.ARGS_PARAMS != null)
                         {
-                            foreach (List<string> args in (ex_function.ARGS_PARAMS == null) ? function.ARGS_PARAMS : ex_function.ARGS_PARAMS)
+                            foreach (List<string> args in ex_function.ARGS_PARAMS == null ? function.ARGS_PARAMS : ex_function.ARGS_PARAMS)
                             {
                                 foreach (string e in execs)
                                 {
@@ -380,7 +381,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                                     {
                                         foreach (string a in getAllFuncReturnFromTample(arg))
                                         {
-                                            string tmp = e + ((argIndex == 0) ? "" : ",") + a;
+                                            string tmp = e + (argIndex == 0 ? "" : ",") + a;
                                             if (!tmpExecs.Contains(tmp)) tmpExecs.Add(tmp);
                                         }
                                     }
@@ -405,7 +406,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                      * 若获取的Func对象集为空,但TMP_NEWOBJS不为空(即DO_CALL的函数为某个对象内的方法)时
                      * 则认为该函数不存在或其对象为内置对象,但此处认为调用内置对象的函数没有任何意义.
                      */
-                    else if ((funcs.Count == 0) && (function.TMP_CLZOBJS != null))
+                    else if (funcs.Count == 0 && function.TMP_CLZOBJS != null)
                     {
                         continue;
                     }
@@ -509,7 +510,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                                     {
                                         foreach (string t in arg_params)
                                         {
-                                            (getAllFuncReturnFromTample(t, ex_function, ex_func)).ForEach(s =>
+                                            getAllFuncReturnFromTample(t, ex_function, ex_func).ForEach(s =>
                                             {
                                                 if (!tmpReturns.Contains(s)) tmpReturns.Add(s);
                                             });
@@ -607,7 +608,7 @@ namespace OpcodeWebshellScan.WebshellChecker
                 foreach (string a in args)
                 {
                     string tmp = t.Replace(targetArg, a);
-                    (getAllFuncReturnFromTample(tmp, extFunction, extFunc)).ForEach(s =>
+                    getAllFuncReturnFromTample(tmp, extFunction, extFunc).ForEach(s =>
                       {
                           if (!tmpTamples.Contains(s)) tmpTamples.Add(s);
                       });

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OpcodeWebshellScan.Utils
+﻿namespace OpcodeWebshellScan.Utils
 {
     class HandlerUtils
     {

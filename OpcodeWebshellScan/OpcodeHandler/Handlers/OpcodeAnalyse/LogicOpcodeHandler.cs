@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
+namespace OpcodeWebshellScan.OpcodeHandler.Handlers.OpcodeAnalyse
 {
     /// <summary>
     /// 逻辑类的操作码无论如何,
@@ -45,8 +45,8 @@ namespace OpcodeWebshellScan.OpcodeHandler.Analyse.OpcodeAnalyse
                     break;
             }
 
-            if (BaseOpcodeHandler.isRegister(reg_or_var)) handler.registerSaver.saveRegister(reg_or_var, ("(" + result + ")"));
-            else handler.varSaver.saveVar(reg_or_var, ("(" + result + ")"), opArray.FUNC_NAME, opArray.CLAZZ_NAME);
+            if (BaseOpcodeHandler.isRegister(reg_or_var)) handler.registerSaver.saveRegister(reg_or_var, "(" + result + ")");
+            else handler.varSaver.saveVar(reg_or_var, "(" + result + ")", opArray.FUNC_NAME, opArray.CLAZZ_NAME);
         }
     }
 }

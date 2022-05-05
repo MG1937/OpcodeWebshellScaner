@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Threading;
 
 namespace OpcodeWebshellScan.Utils
@@ -16,7 +14,8 @@ namespace OpcodeWebshellScan.Utils
         /// <param name="arg">set arguments</param>
         /// <param name="timeout">set Command Timeout</param>
         /// <returns></returns>
-        public static string getExecOutput(string exe,string arg=null,int timeout=4000) {
+        public static string getExecOutput(string exe, string arg = null, int timeout = 4000)
+        {
             string result = "Error";
             try
             {
@@ -32,7 +31,8 @@ namespace OpcodeWebshellScan.Utils
                 p.StartInfo.CreateNoWindow = true;
                 p.Start();
 
-                new Thread(new ThreadStart(()=> {
+                new Thread(new ThreadStart(() =>
+                {
                     Thread.Sleep(timeout);
                     if (!isDone)
                     {
@@ -40,7 +40,7 @@ namespace OpcodeWebshellScan.Utils
                         p.Kill();
                     }
                 })).Start();
-                
+
                 p.StandardInput.AutoFlush = true;
 
                 string strOuput = p.StandardError.ReadLine();
@@ -54,7 +54,8 @@ namespace OpcodeWebshellScan.Utils
                 }
 
                 strOuput = p.StandardOutput.ReadLine();
-                while ((strOuput) != null) {
+                while ((strOuput) != null)
+                {
                     //Console.WriteLine(strOuput + " :: " + strOuput.Length);
                     result += (strOuput);
                     strOuput = p.StandardOutput.ReadLine();
@@ -63,7 +64,7 @@ namespace OpcodeWebshellScan.Utils
 
                 p.Close();
                 isDone = true;
-                return ((timeOut&&result.Equals(""))?"TimeOut":result);
+                return ((timeOut && result.Equals("")) ? "TimeOut" : result);
             }
             catch (Exception)
             {
